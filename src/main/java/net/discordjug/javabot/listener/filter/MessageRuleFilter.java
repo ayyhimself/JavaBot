@@ -11,14 +11,11 @@ import java.security.NoSuchAlgorithmException;
 import java.time.Duration;
 import java.util.Base64;
 import java.util.List;
-import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
 import lombok.RequiredArgsConstructor;
 import net.discordjug.javabot.data.config.BotConfig;
-import net.discordjug.javabot.data.config.PatternTypeAdapter;
 import net.discordjug.javabot.data.config.guild.MessageRule;
 import net.discordjug.javabot.data.config.guild.MessageRule.MessageAction;
 import net.discordjug.javabot.data.config.guild.ModerationConfig;
@@ -41,6 +38,7 @@ public class MessageRuleFilter implements MessageFilter {
 
 	private final BotConfig botConfig;
 	private final MessageCache messageCache;
+	private final Gson gson;
 
 	@Override
 	public MessageModificationStatus processMessage(MessageContent content) {
@@ -73,11 +71,6 @@ public class MessageRuleFilter implements MessageFilter {
 	}
 
 	private void log(MessageContent content, MessageRule ruleToExecute, ModerationConfig moderationConfig) {
-		Gson gson = new GsonBuilder()
-				.serializeNulls()
-				.setPrettyPrinting()
-				.registerTypeAdapter(Pattern.class, new PatternTypeAdapter())
-				.create();
 		EmbedBuilder embed = messageCache.buildMessageCacheEmbed(
 				content.event().getMessage().getChannel(),
 				content.event().getMessage().getAuthor(),

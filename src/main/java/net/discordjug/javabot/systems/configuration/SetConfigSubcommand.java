@@ -1,5 +1,6 @@
 package net.discordjug.javabot.systems.configuration;
 
+import com.google.gson.Gson;
 import net.discordjug.javabot.annotations.AutoDetectableComponentHandler;
 import net.discordjug.javabot.data.config.BotConfig;
 import net.discordjug.javabot.data.config.GuildConfig;
@@ -31,16 +32,21 @@ import javax.annotation.Nonnull;
  */
 @AutoDetectableComponentHandler("config-set")
 public class SetConfigSubcommand extends ConfigSubcommand implements ModalHandler, AutoCompletable {
+
+	private final Gson gson;
+
 	/**
 	 * The constructor of this class, which sets the corresponding {@link SubcommandData}.
 	 * @param botConfig The main configuration of the bot
+	 * @param gson Mapper used for displaying config as json
 	 */
-	public SetConfigSubcommand(BotConfig botConfig) {
+	public SetConfigSubcommand(BotConfig botConfig, Gson gson) {
 		super(botConfig);
 		setCommandData(new SubcommandData("set", "Sets the value of a configuration property.")
 				.addOption(OptionType.STRING, "property", "The name of a property.", true, true)
 				.addOption(OptionType.STRING, "value", "The value to set for the property.", false)
 		);
+		this.gson = gson;
 	}
 
 	@Override
@@ -57,10 +63,11 @@ public class SetConfigSubcommand extends ConfigSubcommand implements ModalHandle
 			if (resolved == null) {
 				return Responses.error(event, "Config `%s` not found", property);
 			}
+			String json = gson.toJson(resolved);
 			return event.replyModal(
 					Modal.create(ComponentIdBuilder.build("config-set", property), "Change configuration value")
 					.addComponents(Label.of("new value", TextInput.create("value", TextInputStyle.PARAGRAPH)
-							.setValue(String.valueOf(resolved))
+							.setValue(json)
 							.build()))
 				.build());
 		}

@@ -1,5 +1,7 @@
 package net.discordjug.javabot.data.config;
 
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 import lombok.extern.slf4j.Slf4j;
 import net.discordjug.javabot.util.ExceptionLogger;
 import net.discordjug.javabot.util.Pair;
@@ -14,6 +16,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 import java.util.function.Function;
+import java.util.regex.Pattern;
 
 /**
  * Utility class for resolving JSON files.
@@ -21,6 +24,11 @@ import java.util.function.Function;
 @Slf4j
 public class ReflectionUtils {
 	private static final Map<Class<?>, Function<String, Object>> propertyTypeParsers = new HashMap<>();
+	private static final Gson gson = new GsonBuilder()
+			.serializeNulls()
+			.setPrettyPrinting()
+			.registerTypeAdapter(Pattern.class, new PatternTypeAdapter())
+			.create();
 
 	static {
 		propertyTypeParsers.put(Integer.class, Integer::parseInt);
@@ -126,13 +134,11 @@ public class ReflectionUtils {
 	 * @param field  The field to set.
 	 * @param parent The object whose property value to set.
 	 * @param s      The string representation of the value.
+	 * @return Returns the edited {@link Field}.
 	 * @throws IllegalAccessException If the field cannot be set.
 	 */
-	public static void set(@NotNull Field field, @NotNull Object parent, @NotNull String s) throws IllegalAccessException {
-		Function<String, Object> parser = propertyTypeParsers.get(field.getType());
-		if (parser == null) {
-			throw new IllegalArgumentException("No supported property type parser for the type " + field.getType().getSimpleName());
-		}
-		field.set(parent, parser.apply(s));
+	public static Field set(@NotNull Field field, @NotNull Object parent, @NotNull String s) throws IllegalAccessException {
+		field.set(parent, gson.fromJson(s, field.getType()));
+		return field;
 	}
 }

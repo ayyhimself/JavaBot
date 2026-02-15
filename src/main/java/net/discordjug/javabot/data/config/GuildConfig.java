@@ -167,7 +167,10 @@ public class GuildConfig {
 		Optional<Pair<Field, Object>> result = ReflectionUtils.resolveField(propertyName, this);
 		result.ifPresent(pair -> {
 			try {
-				ReflectionUtils.set(pair.first(), pair.second(), value);
+				Field updatedField = ReflectionUtils.set(pair.first(), pair.second(), value);
+				if (updatedField.get(pair.second()) instanceof GuildConfigItem) {
+					((GuildConfigItem) updatedField.get(pair.second())).setGuildConfig(this);
+				}
 				this.flush();
 			} catch (IllegalAccessException e) {
 				ExceptionLogger.capture(e, getClass().getSimpleName());
